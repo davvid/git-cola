@@ -161,7 +161,7 @@ class Theme(object):
                 spacing: 2px;
             }
             QDockWidget > QFrame {
-                margin: 0 8px 2px 8px;
+                margin: 0 0px 0px 0px;
                 min-height: 40px;
             }
             QPlainTextEdit, QLineEdit, QTextEdit, QAbstractItemView,
