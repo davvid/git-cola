@@ -131,6 +131,7 @@ Thanks
 * Mike Hanson
 * MikHulk
 * Minarto Margoliono
+* Miron Moderau
 * Mosaab Alzoubi
 * Myz
 * Naraesk
