@@ -317,7 +317,7 @@ def _win32_find_exe(exe):
 
 
 # Portability wrappers
-if sys.platform == 'win32' or sys.platform == 'cygwin':
+if WIN32:
     fork = _fork_win32
 else:
     fork = _fork_posix
