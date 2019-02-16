@@ -393,6 +393,23 @@ else:
     getcwd = os.getcwd
 
 
+def git_expanduser(value):
+    """Specialized expanduser() for Windows
+
+    Expand "~" using HOMEDRIVE and HOMEPATH on Windows.
+    This is currently needed when finding .gitconfig to support
+    common Windows configuration setups.
+
+    """
+    if WIN32 and value.startswith('~'):
+        homedrive = getenv('HOMEDRIVE')
+        homepath = getenv('HOMEPATH')
+        if homedrive and homepath:
+            return homedrive + homepath + value[1:]
+
+    return expanduser(value)
+
+
 # NOTE: find_executable() is originally from the stdlib, but starting with
 # python3.7 the stdlib no longer bundles distutils.
 def _find_executable(executable, path=None):

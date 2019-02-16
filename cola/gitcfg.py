@@ -16,8 +16,8 @@ from .compat import ustr
 
 BUILTIN_READER = os.environ.get('GIT_COLA_BUILTIN_CONFIG_READER', False)
 
-_USER_CONFIG = core.expanduser(join('~', '.gitconfig'))
-_USER_XDG_CONFIG = core.expanduser(
+_USER_CONFIG = core.git_expanduser(join('~', '.gitconfig'))
+_USER_XDG_CONFIG = core.git_expanduser(
     join(core.getenv('XDG_CONFIG_HOME', join('~', '.config')),
          'git', 'config'))
 
