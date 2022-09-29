@@ -426,7 +426,32 @@ def node():
 abspath = wrap(mkpath, os.path.abspath, decorator=decode)
 chdir = wrap(mkpath, os.chdir)
 exists = wrap(mkpath, os.path.exists)
-expanduser = wrap(encode, os.path.expanduser, decorator=decode)
+_expanduser = wrap(encode, os.path.expanduser, decorator=decode)
+
+
+def _expanduser_win32(value):
+    """Specialized expanduser() for Windows
+
+    Expand "~" using HOMEDRIVE and HOMEPATH on Windows.
+    This is currently needed when finding .gitconfig to support
+    common Windows configuration setups.
+
+    """
+    if value.startswith('~'):
+        homedrive = getenv('HOMEDRIVE')
+        homepath = getenv('HOMEPATH')
+        if homedrive and homepath:
+            return homedrive + homepath + value[1:]
+
+    return _expanduser(value)
+
+
+if WIN32:
+    expanduser = _expanduser_win32
+else:
+    expanduser = _expanduser
+
+
 if PY2:
     if hasattr(os, 'getcwdu'):
         # pylint: disable=no-member
