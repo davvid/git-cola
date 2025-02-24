@@ -39,9 +39,6 @@ class RemoteEditor(standard.Dialog):
         self.current_name = ''
         self.current_url = ''
 
-        hint = N_('Edit remotes by selecting them from the list')
-        self.default_hint = hint
-
         self.remote_list = []
         self.remotes = QtWidgets.QListWidget()
         self.remotes.setToolTip(N_('Remote git repositories - double-click to rename'))
@@ -63,7 +60,8 @@ class RemoteEditor(standard.Dialog):
             'Remotes can be renamed by selecting one from the list\n'
             'and pressing "enter", or by double-clicking.'
         )
-        hint = self.default_hint
+        hint = N_('Edit remotes by selecting them from the list')
+        self.default_hint = hint
         self.info = text.VimHintedPlainTextEdit(context, hint, parent=self)
         self.info.setToolTip(tooltip)
 
