@@ -37,6 +37,7 @@ from . import commitmsg
 from . import common
 from . import compare
 from . import createbranch
+from . import createmergerequest
 from . import createtag
 from . import dag
 from . import diff
@@ -585,6 +586,13 @@ class MainView(standard.MainWindow):
         )
         self.checkout_branch_action.setIcon(icons.branch())
 
+        self.create_merge_request_action = qtutils.add_action(
+            self,
+            N_('Create Merge Request...'),
+            partial(createmergerequest.create_merge_request, context),
+        )
+        self.create_merge_request_action.setIcon(icons.merge())
+
         self.branch_review_action = qtutils.add_action(
             self, N_('Review...'), partial(guicmds.review_branch, context)
         )
@@ -831,6 +839,8 @@ class MainView(standard.MainWindow):
 
         # Branch Menu
         self.branch_menu = add_menu(N_('Branch'), self.menubar)
+        if forge.ENABLED:
+            self.branch_menu.addAction(self.create_merge_request_action)
         self.branch_menu.addAction(self.branch_review_action)
         self.branch_menu.addSeparator()
         self.branch_menu.addAction(self.create_branch_action)
