@@ -41,6 +41,7 @@ class RemoteEditor(standard.Dialog):
         self.context = context
         self.current_name = ''
         self.current_url = ''
+        self.current_forge = ''
 
         self.remote_list = []
         self.remotes = QtWidgets.QListWidget()
@@ -96,7 +97,7 @@ class RemoteEditor(standard.Dialog):
         )
 
         self._display_layout = qtutils.vbox(
-            defs.no_margin, defs.spacing, self._edit_layout, self.info
+            defs.no_margin, defs.spacing, self._edit_layout, defs.spacing, self.info
         )
         self._display_widget = QtWidgets.QWidget(self)
         self._display_widget.setLayout(self._display_layout)
@@ -167,7 +168,12 @@ class RemoteEditor(standard.Dialog):
         """Has the editor changed any values?"""
         url = self.editor.url
         name = self.editor.name
-        return url != self.current_url or name != self.current_name
+        forge = self.editor.forge
+        return (
+            url != self.current_url
+            or name != self.current_name
+            or forge != self.current_forge
+        )
 
     def save(self):
         """Save edited settings to Git's configuration"""
@@ -176,11 +182,15 @@ class RemoteEditor(standard.Dialog):
         context = self.context
         name = self.editor.name
         url = self.editor.url
+        forge = self.editor.forge
+
         old_url = self.current_url
         old_name = self.current_name
+        old_forge = self.current_forge
 
         name_changed = name and name != old_name
         url_changed = url and url != old_url
+        forge_changed = forge != old_forge
 
         focus = self.focusWidget()
         name_ok = False
@@ -195,6 +205,9 @@ class RemoteEditor(standard.Dialog):
         elif url_changed:
             result = cmds.do(cmds.RemoteSetURL, context, name, url)
             url_ok = result[0]
+        if forge_changed:
+            cmds.do(cmds.RemoteSetForge, context, name, forge)
+            self.current_forge = forge
 
         # Update state if the URL change succeeded
         gather = False
@@ -212,7 +225,7 @@ class RemoteEditor(standard.Dialog):
             self.select_remote(idx)
             gather = False  # already done by select_remote()
 
-        if name_changed or url_changed:
+        if name_changed or url_changed or forge_changed:
             valid = self.editor.validate()
             self.editor_validated(valid)
 
@@ -233,6 +246,7 @@ class RemoteEditor(standard.Dialog):
         self.editor.setEnabled(False)
         self.editor.name = ''
         self.editor.url = ''
+        self.editor.forge = ''
         self.info.hint.set_value(self.default_hint)
         self.info.set_value('')
 
@@ -297,7 +311,7 @@ class RemoteEditor(standard.Dialog):
         if not remote:
             return
         cmds.do(cmds.RemoteRemove, self.context, remote)
-        self.update_editor(name='', url='', enable=False)
+        self.update_editor(name='', url='', forge='', enable=False)
         self.refresh(select=True)
 
     def remote_item_renamed(self, item):
@@ -333,11 +347,12 @@ class RemoteEditor(standard.Dialog):
     def activate_remote(self, name, gather_info=True):
         """Activate the specified remote"""
         url = gitcmds.remote_url(self.context, name)
-        self.update_editor(name=name, url=url)
+        forge = gitcmds.remote_forge(self.context, name)
+        self.update_editor(name=name, url=url, forge=forge)
         if gather_info:
             self.gather_info()
 
-    def update_editor(self, name=None, url=None, enable=True):
+    def update_editor(self, name=None, url=None, forge=None, enable=True):
         """Update the editor and enable it for editing"""
         # These fields must be updated in this exact order otherwise
         # the editor will be seen as edited, which causes the Reset button
@@ -348,6 +363,11 @@ class RemoteEditor(standard.Dialog):
         if url is not None:
             self.current_url = url
             self.editor.url = url
+        if forge is not None:
+            if forge and forge not in self.editor.forges.values():
+                self.editor.forges.add_item(forge)
+            self.current_forge = forge
+            self.editor.forge = forge
 
         self.editor.setEnabled(enable)
 
@@ -360,15 +380,19 @@ class RemoteEditor(standard.Dialog):
         self.info_thread.start()
 
 
-def add_remote(context, parent, name='', url='', readonly_url=False):
+def add_remote(context, parent, name='', url='', forge='', readonly_url=False):
     """Bring up the "Add Remote" dialog"""
     widget = AddRemoteDialog(context, parent, readonly_url=readonly_url)
     if name:
         widget.name = name
     if url:
         widget.url = url
+    if forge:
+        widget.forge = forge
     if widget.run():
         cmds.do(cmds.RemoteAdd, context, widget.name, widget.url)
+        if widget.forge:
+            cmds.do(cmds.RemoteSetForge, context, widget.name, widget.forge)
         result = True
     else:
         result = False
@@ -441,8 +465,12 @@ class AddRemoteDialog(QtWidgets.QDialog):
     def set_url(self, value):
         self.widget.url = value
 
+    def set_forge(self, value):
+        self.widget.forge = value
+
     name = property(operator.attrgetter('widget.name'), set_name)
     url = property(operator.attrgetter('widget.url'), set_url)
+    forge = property(operator.attrgetter('widget.forge'), set_forge)
 
     def run(self):
         self.show()
@@ -467,6 +495,14 @@ class RemoteWidget(QtWidgets.QWidget):
         lambda self: get(self.remote_url),
         lambda self, value: self.remote_url.set_value(value),
     )
+    forge = property(
+        lambda self: self.get_forge(),
+        lambda self, value: self.set_forge(value),
+    )
+    forge_index = property(
+        lambda self: self.forges.currentIndex(),
+        lambda self, value: self.forges.setCurrentIndex(value),
+    )
     valid = Signal(bool)
 
     def __init__(self, context, parent, readonly_url=False):
@@ -479,6 +515,8 @@ class RemoteWidget(QtWidgets.QWidget):
         self.open_button = qtutils.create_button(
             text=N_('Browse...'), icon=icons.folder(), tooltip=N_('Select repository')
         )
+        forge_choices = [N_('No Forge')] + gitcmds.get_forges(context)
+        self.forges = qtutils.combo(forge_choices, tooltip=N_('Git Forge'), parent=self)
 
         self.url_layout = qtutils.hbox(
             defs.no_margin, defs.spacing, self.remote_url, self.open_button
@@ -492,17 +530,38 @@ class RemoteWidget(QtWidgets.QWidget):
             defs.spacing,
             (N_('Name'), self.remote_name),
             (N_('URL'), self.url_layout),
+            (N_('Forge'), self.forges),
         )
         self._layout = qtutils.vbox(defs.margin, defs.spacing, self._form)
         self.setLayout(self._layout)
 
         self.remote_name.textChanged.connect(self.validate)
         self.remote_url.textChanged.connect(self.validate)
+        self.forges.currentIndexChanged.connect(self.validate)
         qtutils.connect_button(self.open_button, self.open_repo)
 
         if readonly_url:
             self.remote_url.setReadOnly(True)
             self.open_button.setEnabled(False)
+
+    def get_forge(self):
+        """Get the current forge. Returns an empty string when no forge is configured"""
+        idx = self.forge_index
+        if idx == 0:
+            return ''
+        return self.forges.value()
+
+    def set_forge(self, forge):
+        """Set the forge by value"""
+        if not forge:
+            idx = 0
+        else:
+            try:
+                idx = self.forges.values().index(forge)
+            except ValueError:
+                self.forges.add_item(forge)
+                idx = len(self.forges.values()) - 1
+        self.forge_index = idx
 
     def validate(self, _text_or_index=''):
         """Validate the current inputs"""
