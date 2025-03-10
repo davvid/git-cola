@@ -40,8 +40,9 @@ from . import createbranch
 from . import createtag
 from . import dag
 from . import diff
-from . import finder
 from . import editremotes
+from . import forge
+from . import finder
 from . import grep
 from . import log
 from . import merge
@@ -273,6 +274,11 @@ class MainView(standard.MainWindow):
             self, N_('Preferences'), prefs_func, QtGui.QKeySequence.Preferences
         )
         self.preferences_action.setIcon(icons.configure())
+
+        self.edit_forges_action = qtutils.add_action(
+            self, N_('Edit Forges...'), partial(forge.editor, context)
+        )
+        self.edit_forges_action.setIcon(icons.edit())
 
         self.edit_remotes_action = qtutils.add_action(
             self, N_('Edit Remotes...'), partial(editremotes.editor, context)
@@ -695,6 +701,8 @@ class MainView(standard.MainWindow):
         self.file_menu.addAction(self.rescan_action)
         self.file_menu.addAction(self.find_files_action)
         self.file_menu.addAction(self.edit_remotes_action)
+        if forge.ENABLED:
+            self.file_menu.addAction(self.edit_forges_action)
         self.file_menu.addAction(self.browse_recently_modified_action)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.save_tarball_action)

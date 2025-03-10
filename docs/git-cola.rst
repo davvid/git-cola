@@ -110,6 +110,12 @@ fetch
 Fetch history from remote repositories. ``git cola fetch`` is an entry point for the
 ``Actions > Fetch...`` main menu action.
 
+forges
+------
+
+Edit API tokens for Git Forges. ``git cola forges`` is an entry point for the
+``File > Edit Forges...`` main menu action.
+
 grep
 ----
 
@@ -1615,6 +1621,30 @@ The completion scripts and instructions are included in Git Cola's
 * `Shell completion scripts <https://gitlab.com/git-cola/git-cola/-/tree/main/contrib>`_
 
 * `Setup instructions <https://gitlab.com/git-cola/git-cola/-/blob/main/contrib/README.md>`_
+
+
+FORGES
+======
+
+Git Cola can interact with software forges when additional Python modules are
+installed. Forges are configured using the ``File > Edit Forges...`` main menu action
+or the ``git cola forges`` sub-command.
+
+Forges settings are configured in your global user settings and associated with specific
+remotes per-repository using the ``File > Edit Remotes...`` menu action or the
+``git cola remote`` sub-command.
+
+Gitlab
+------
+
+Install the `python-gitlab <https://pypi.org/project/python-gitlab>_`
+Python module to enable interactions with Gitlab servers.
+
+The `API Token` field must be filled in with a *Gitlab Personal Access Token*
+with the ``read_api``, ``read_repository``, and ``write_repository`` scopes.
+
+Specify `https://gitlab.com` as the URL to interact with the main Gitlab service.
+Self-hosted Gitlab servers are also supported by specifying a custom URL.
 
 
 MACOS NOTES

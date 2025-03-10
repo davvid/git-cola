@@ -1678,6 +1678,60 @@ class Edit(ContextCommand):
             Interaction.critical(N_('Error Editing File'), message, details)
 
 
+class ForgeDelete:
+    """Delete settings for a forge"""
+
+    def __init__(self, context, name):
+        self.context = context
+        self.name = name
+
+    def do(self):
+        """Update the git configuration for a forge"""
+        self.context.cfg.set_user(f'cola.forge.{self.name}.backend', None)
+        self.context.cfg.set_user(f'cola.forge.{self.name}.token', None)
+        self.context.cfg.set_user(f'cola.forge.{self.name}.url', None)
+
+
+class ForgeUpdate:
+    """Update details for a forge"""
+
+    def __init__(self, context, name, backend, token, url):
+        self.context = context
+        self.name = name
+        self.backend = backend
+        self.token = token
+        self.url = url
+
+    def do(self):
+        """Update the git configuration for a forge"""
+        if self.name:
+            self.context.cfg.set_user(f'cola.forge.{self.name}.backend', self.backend)
+            self.context.cfg.set_user(f'cola.forge.{self.name}.token', self.token)
+            self.context.cfg.set_user(f'cola.forge.{self.name}.url', self.url)
+            return True, bool(self.backend), bool(self.url), bool(self.token)
+        return False, False, False, False
+
+
+class ForgeRename:
+    """Rename a forge"""
+
+    def __init__(self, context, old_name, name, backend, token, url):
+        self.context = context
+        self.old_name = old_name
+        self.name = name
+        self.forge_delete = ForgeDelete(self.context, self.old_name)
+        self.forge_update = ForgeUpdate(self.context, self.name, backend, token, url)
+
+    def do(self):
+        """Update the git configuration for a forge"""
+        if self.old_name:
+            self.forge_delete.do()
+        if self.name:
+            self.forge_update.do()
+            return True
+        return False
+
+
 class FormatPatch(ContextCommand):
     """Output a patch series given all revisions and a selected subset."""
 

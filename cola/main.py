@@ -48,6 +48,7 @@ def parse_args(argv):
     add_dag_command(subparser)
     add_diff_command(subparser)
     add_fetch_command(subparser)
+    add_forges_command(subparser)
     add_find_command(subparser)
     add_grep_command(subparser)
     add_merge_command(subparser)
@@ -175,6 +176,11 @@ def add_diff_command(subparser):
 def add_fetch_command(subparser):
     """Add the "git cola fetch" command for fetching repositories"""
     add_command(subparser, 'fetch', 'fetch remotes', cmd_fetch)
+
+
+def add_forges_command(subparser):
+    """Add the "git cola forges" command for editing forges"""
+    add_command(subparser, 'forges', 'edit forges', cmd_forges)
 
 
 def add_find_command(subparser):
@@ -624,6 +630,14 @@ def cmd_fetch(args):
     context = app.application_init(args)
     context.model.update_status()
     view = remote.fetch(context)
+    return app.application_start(context, view)
+
+
+def cmd_forges(args):
+    from .widgets import forge
+
+    context = app.application_init(args)
+    view = forge.editor(context, run=False)
     return app.application_start(context, view)
 
 

@@ -3,6 +3,11 @@ Upcoming
 
 Usability, bells and whistles
 -----------------------------
+* Git Cola can now interact with git forges. Support for Gitlab has been added as the
+  first supported forge. The `File > Edit Forges...` dialog can be used to configure API
+  tokens and the `File > Edit Remotes...` dialog can be used to associate remotes with
+  configured forges.
+
 * Large diffs are now truncated to one megabyte by default for performance.
   The diff size limit can be changed in the diff editor's options menu.
   (`#1484 <https://github.com/git-cola/git-cola/issues/1484>`_)
