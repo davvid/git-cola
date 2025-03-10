@@ -965,6 +965,7 @@ class RemoteRemove(RemoteCommand):
         return Interaction.confirm(title, question, info, ok_text)
 
     def action(self):
+        self.cfg.set_repo(f'cola.remote.{self.remote}.forge', '')
         return self.git.remote('rm', self.remote)
 
     def error_message(self):
@@ -1018,6 +1019,19 @@ class RemoteSetURL(RemoteCommand):
 
     def command(self):
         return f'git remote set-url "{self.remote}" "{self.url}"'
+
+
+class RemoteSetForge(ContextCommand):
+    """Set the forge for the specified remote"""
+
+    def __init__(self, context, remote, forge):
+        super().__init__(context)
+        self.remote = remote
+        self.forge = forge
+
+    def do(self):
+        self.cfg.set_repo('cola.remote.%s.forge' % self.remote, self.forge)
+        return bool(self.forge)
 
 
 class RemoteEdit(ContextCommand):

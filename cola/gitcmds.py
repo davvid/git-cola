@@ -54,6 +54,12 @@ def get_default_remote(context):
     return upstream or context.cfg.get('remote.pushDefault', default='origin')
 
 
+def get_forges(context):
+    """Get the currently configured forge names"""
+    forge_urls = context.cfg.find('cola.forge.*.url')
+    return utils.strip_prefixes_and_suffixes(forge_urls, 'cola.forge.', '.url')
+
+
 def upstream_remote(context, branch=None):
     """Return the remote associated with the specified branch"""
     config = context.cfg
@@ -68,6 +74,12 @@ def remote_url(context, remote, push=False):
     if push:
         url = config.get(f'remote.{remote}.pushurl', url)
     return url
+
+
+def remote_forge(context, remote):
+    """Return the Forge for the specified remote"""
+    config = context.cfg
+    return config.get(f'cola.remote.{remote}.forge', '')
 
 
 def diff_index_filenames(context, ref):
