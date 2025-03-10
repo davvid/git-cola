@@ -9,6 +9,11 @@ Usability, bells and whistles
 * The commit date widget now has a button to reset the time and date to the current time
   and date.
 
+* Git Cola can now interact with git forges. Support for Gitlab has been added as the
+  first supported forge. The `File > Edit Forges...` dialog can be used to configure API
+  tokens and the `File > Edit Remotes...` dialog can be used to associate remotes with
+  configured forges.
+
 Fixes
 -----
 
