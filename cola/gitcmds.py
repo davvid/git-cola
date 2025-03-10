@@ -54,6 +54,37 @@ def get_default_remote(context):
     return upstream or context.cfg.get('remote.pushDefault', default='origin')
 
 
+class Forge:
+    """Container for forge details"""
+
+    def __init__(self, name, backend, url, token):
+        self.name = name
+        self.backend = backend
+        self.url = url
+        self.token = token
+
+    @classmethod
+    def from_context(cls, context, name):
+        """Construct a Forge from a context and name"""
+        return cls(
+            name=name,
+            backend=context.cfg.get(f'cola.forge.{name}.backend', ''),
+            url=context.cfg.get(f'cola.forge.{name}.url', ''),
+            token=context.cfg.get(f'cola.forge.{name}.token', ''),
+        )
+
+    def __repr__(self):
+        """Display a Forge"""
+        return 'Forge(name={}, backend={}, url={}, token={})'.format(
+            repr(self.name), repr(self.backend), repr(self.url), repr(self.token)
+        )
+
+
+def get_forge_details(context, forges):
+    """Get details about a the specified forges"""
+    return {name: Forge.from_context(context, name) for name in forges}
+
+
 def get_forges(context):
     """Get the currently configured forge names"""
     forge_urls = context.cfg.find('cola.forge.*.url')
@@ -80,6 +111,14 @@ def remote_forge(context, remote):
     """Return the Forge for the specified remote"""
     config = context.cfg
     return config.get(f'cola.remote.{remote}.forge', '')
+
+
+def forge_remotes(context):
+    """Return a list of remotes with associated forges"""
+    remote_forges = context.cfg.find('cola.remote.*.forge')
+    return utils.strip_prefixes_and_suffixes_from_keys(
+        remote_forges, 'cola.remote.', '.forge'
+    )
 
 
 def diff_index_filenames(context, ref):
