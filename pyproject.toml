@@ -43,6 +43,8 @@ extras = [
     "notify2",
     # Enables macOS-specific appearance themes.
     "pyobjc; sys_platform == 'darwin'",
+    # Enables Gitlab features
+    "python-gitlab",
     # Enables the "Send to Trash" feature.
     "send2trash",
 ]

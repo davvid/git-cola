@@ -72,6 +72,9 @@ enables delivery of desktop notifications.
 enables macOS-specific application themes on macOS.
 ([source](https://github.com/ronaldoussoren/pyobjc))
 
+[python-gitlab](https://pypi.org/project/python-gitlab)
+enables Gitlab-specific forge features.
+
 
 # Installation
 

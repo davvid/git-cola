@@ -28,6 +28,11 @@ Usability, bells and whistles
   enabled. The cursor previously jumped to the beginning and end of a word-wrapped line
   when Up and Down were pressed.
 
+* Git Cola can now interact with git forges. Support for Gitlab has been added as the
+  first supported forge. The `File > Edit Forges...` dialog can be used to configure API
+  tokens and the `File > Edit Remotes...` dialog can be used to associate remotes with
+  configured forges.
+
 Fixes
 -----
 
