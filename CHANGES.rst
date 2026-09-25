@@ -87,8 +87,8 @@ Fixes
   (`#1633 <https://github.com/git-cola/git-cola/pull/1633>`_)
 
 * The `resources` module was not considering when the package was installed into
-  the convention ``dist-packages`` area, which is used on Debian and other distros.
-  Only ``site-packages`` was being considered.
+  the conventional Python ``dist-packages`` area, which is used on Debian and
+  other distros. Only ``site-packages`` was being considered.
   (`#1652 <https://github.com/git-cola/git-cola/pull/1652>`_)
 
 Translations
