@@ -27,6 +27,7 @@ Thanks
 * Andrej Kvasnica
 * Andrew Chen
 * Andrew Hemming
+* Andrey Voitov
 * Andy O'Neill
 * armandg
 * Arthur Coelho
