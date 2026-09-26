@@ -1377,7 +1377,9 @@ class FocusProxy:
         # We ignore the parent when delegating to child widgets
         widgets = widgets[1:]
 
-        focus = parent.focusWidget()
+        focus = qtutils.app().focusWidget()
+        if focus not in widgets:
+            focus = parent.focusWidget()
         if focus not in widgets:
             focus = fallback
         return focus
