@@ -736,6 +736,27 @@ class MainView(standard.MainWindow):
         self.edit_proxy = edit_proxy = FocusProxy(
             editor, editor.summary, editor.description
         )
+        self._can_undo = {
+            id(editor.summary): False,
+            id(editor.description): False,
+        }
+        self._can_redo = {
+            id(editor.summary): False,
+            id(editor.description): False,
+        }
+
+        editor.summary.undoAvailable.connect(
+            lambda available: self._undo_available(editor.summary, available)
+        )
+        editor.summary.redoAvailable.connect(
+            lambda available: self._redo_available(editor.summary, available)
+        )
+        editor.description.undoAvailable.connect(
+            lambda available: self._undo_available(editor.description, available)
+        )
+        editor.description.redoAvailable.connect(
+            lambda available: self._redo_available(editor.description, available)
+        )
 
         copy_widgets = (
             self,
@@ -751,10 +772,21 @@ class MainView(standard.MainWindow):
         edit_proxy.override('selectAll', select_widgets)
 
         edit_menu = self.edit_menu = add_menu(N_('&Edit'), self.menubar)
-        undo = qtutils.add_action(edit_menu, N_('Undo'), edit_proxy.undo, hotkeys.UNDO)
+
+        undo = qtutils.add_action(
+            edit_menu, N_('Undo Message'), edit_proxy.undo, hotkeys.UNDO
+        )
         undo.setIcon(icons.undo())
-        redo = qtutils.add_action(edit_menu, N_('Redo'), edit_proxy.redo, hotkeys.REDO)
+        undo.setEnabled(False)
+        self.undo_message_action = undo
+
+        redo = qtutils.add_action(
+            edit_menu, N_('Redo Message'), edit_proxy.redo, hotkeys.REDO
+        )
         redo.setIcon(icons.redo())
+        redo.setEnabled(False)
+        self.redo_message_action = redo
+
         edit_menu.addSeparator()
         cut = qtutils.add_action(edit_menu, N_('Cut'), edit_proxy.cut, hotkeys.CUT)
         cut.setIcon(icons.cut())
@@ -783,6 +815,7 @@ class MainView(standard.MainWindow):
         select_all.setIcon(icons.select_all())
         edit_menu.addSeparator()
         qtutils.add_menu_actions(edit_menu, self.commiteditor.menu_actions)
+        edit_menu.aboutToShow.connect(self._update_undo_redo_actions)
 
         # Actions menu
         self.actions_menu = add_menu(N_('Actions'), self.menubar)
@@ -985,6 +1018,21 @@ class MainView(standard.MainWindow):
 
     def set_filter(self, txt):
         self.statuswidget.set_filter(txt)
+
+    def _undo_available(self, widget, available):
+        self._can_undo[id(widget)] = available
+        self._update_undo_redo_actions()
+
+    def _redo_available(self, widget, available):
+        self._can_redo[id(widget)] = available
+        self._update_undo_redo_actions()
+
+    def _update_undo_redo_actions(self):
+        focus = self.edit_proxy.focus()
+        can_undo = self._can_undo.get(id(focus), False)
+        can_redo = self._can_redo.get(id(focus), False)
+        self.undo_message_action.setEnabled(can_undo)
+        self.redo_message_action.setEnabled(can_redo)
 
     # Qt overrides
     def closeEvent(self, event):
@@ -1367,7 +1415,7 @@ class FocusProxy:
     def override(self, name, widgets):
         self.overrides[name] = widgets
 
-    def focus(self, name):
+    def focus(self, name=''):
         """Return the currently focused widget"""
         widgets = self.overrides.get(name, self.widgets)
         # The parent must be the parent of all the proxied widgets
@@ -1391,7 +1439,10 @@ class FocusProxy:
             focus = self.focus(name)
             func = getattr(focus, name, None)
             if func:
-                func()
+                result = func()
+            else:
+                result = None
+            return result
 
         return callback
 
