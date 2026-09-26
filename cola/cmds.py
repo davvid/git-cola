@@ -3683,8 +3683,12 @@ def run(cls: Any, *args, **opts) -> Callable:
 def do(cls: Any, *args, **opts) -> Any:
     """Run a command in-place"""
     try:
+        result = True
         cmd = cls(*args, **opts)
-        result = cmd.do()
+        if hasattr(cmd, 'context'):
+            cmd.context.command_bus.do(cmd, queued=False)
+        else:
+            result = cmd.do()
         if hasattr(cmd, 'result'):
             result = cmd.result
         return result
@@ -3695,3 +3699,8 @@ def do(cls: Any, *args, **opts) -> Any:
         Interaction.critical(N_('Error'), message=msg, details=details)
 
     return False
+
+
+def undo(context):
+    """Undo the most recent command"""
+    return context.command_bus.undo()
