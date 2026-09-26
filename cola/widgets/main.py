@@ -241,7 +241,7 @@ class MainView(standard.MainWindow):
             self,
             N_('Skip Current Patch'),
             N_('Skip applying the current patch and continue applying patches'),
-            cmds.run(cmds.ApplyPatchesContinue, context),
+            cmds.run(cmds.ApplyPatchesSkip, context),
         )
         self.apply_patches_skip_action.setIcon(icons.discard())
 
