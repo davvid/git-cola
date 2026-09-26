@@ -82,17 +82,18 @@ if TYPE_CHECKING:
 
 def setup_environment() -> operations.IOperations:
     """Set environment variables to control git's behavior"""
+    ops = operations_local.LocalOperations()
+
     # Allow Ctrl-C to exit
     random.seed(hash(time.time()))
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     # Session management wants an absolute path when restarting
     sys.argv[0] = sys_argv0 = os.path.abspath(sys.argv[0])
+    core.setenv(ops, 'GIT_COLA', sys_argv0)
 
     # Spoof an X11 display for SSH
     os.environ.setdefault('DISPLAY', ':0')
-
-    ops = operations_local.LocalOperations()
 
     if not core.getenv('SHELL', ''):
         for shell in ('/bin/zsh', '/bin/bash', '/bin/sh'):
