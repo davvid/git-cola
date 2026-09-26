@@ -170,9 +170,9 @@ class Interaction:
         """Emit status, out, and err into the log"""
         msg = ''
         if out:
-            msg += out + '\n'
+            msg += f'{out}\n'
         if err:
-            msg += err + '\n'
+            msg += f'{err}\n'
         cls.log(msg)
         cls.log(f'exit status {status}')
 
