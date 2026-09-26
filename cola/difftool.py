@@ -34,7 +34,7 @@ class LaunchDifftool(cmds.ContextCommand):
     def name() -> str:
         return N_('Launch Diff Tool')
 
-    def do(self) -> None:
+    def do(self) -> bool:
         s = self.selection.selection()
         if s.unmerged:
             paths = s.unmerged
@@ -70,6 +70,7 @@ class LaunchDifftool(cmds.ContextCommand):
                 core.fork(argv, ops=self.context.ops)
         else:
             difftool_run(self.context)
+        return True
 
 
 class Difftool(standard.Dialog):

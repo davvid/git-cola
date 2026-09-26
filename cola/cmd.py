@@ -2,7 +2,6 @@
 from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
-from typing import Any
 
 from qtpy import QtCore
 from qtpy.QtCore import Qt
@@ -17,10 +16,6 @@ class Command:
 
     UNDOABLE = False
 
-    def __init__(self) -> None:
-        """Initialize the base command"""
-        self.can_undo = False
-
     @staticmethod
     def name() -> str:
         """Return the command's name"""
@@ -31,14 +26,19 @@ class Command:
         """Can this be undone?"""
         return cls.UNDOABLE
 
-    def do(self) -> Any:
-        """Execute the command"""
-        self.can_undo = True
+    def do(self) -> bool:
+        """Execute the command
+
+        Returns False to signal that an operation should be aborted.
+        """
         return True
 
     def undo(self) -> bool:
-        """Undo the command"""
-        return self.can_undo
+        """Undo the command
+
+        Returns False to signal that an operation should be aborted.
+        """
+        return True
 
 
 class ContextCommand(Command):
@@ -55,7 +55,7 @@ class ContextCommand(Command):
         self.fsmonitor = context.fsmonitor
         self.old_timestamp = context.timestamp
 
-    def do(self) -> Any:
+    def do(self) -> bool:
         """Update the context"""
         # Commands can get executed in the background, and completion of one command may
         # happen *after* another Diff and similar commands have been fired. We prevent
@@ -67,9 +67,10 @@ class ContextCommand(Command):
         self.context.timestamp = self.timestamp
         return True
 
-    def undo(self) -> None:
-        super().undo()
+    def undo(self) -> bool:
+        result = super().undo()
         self.context.timestamp = self.old_timestamp
+        return result
 
 
 class CommandBus(QtCore.QObject):
@@ -82,9 +83,12 @@ class CommandBus(QtCore.QObject):
         self.do_command.connect(lambda cmd: cmd.do(), type=Qt.QueuedConnection)
         self.undo_command.connect(lambda cmd: cmd.undo(), type=Qt.QueuedConnection)
 
-    def do(self, cmd: Command) -> None:
+    def do(self, cmd: Command, queued=True) -> None:
         """Run a command on the main thread"""
-        self.do_command.emit(cmd)
+        if queued:
+            self.do_command.emit(cmd)
+        else:
+            cmd.do()
 
     def undo(self, cmd: Command) -> None:
         """Undo a command on the main thread"""

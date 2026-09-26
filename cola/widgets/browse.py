@@ -569,7 +569,7 @@ class SaveBlob(cmds.ContextCommand):
         super().__init__(context)
         self.browse_model = model
 
-    def do(self):
+    def do(self) -> bool:
         model = self.browse_model
         if model.ref == dag.WORKTREE:
             try:
@@ -598,7 +598,7 @@ class SaveBlob(cmds.ContextCommand):
                 N_('Error Saving File'), 'git cat-file', status, out, err
             )
         if status != 0:
-            return
+            return False
 
         msg = N_('Saved "%(filename)s" from "%(ref)s" to "%(destination)s"') % {
             'filename': model.relpath,
@@ -610,6 +610,7 @@ class SaveBlob(cmds.ContextCommand):
         Interaction.information(
             N_('File Saved'), N_('File saved to "%s"') % model.filename
         )
+        return True
 
 
 class BrowseBranch(standard.Dialog):

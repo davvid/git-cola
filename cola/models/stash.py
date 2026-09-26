@@ -54,7 +54,7 @@ class ApplyStash(cmds.ContextCommand):
         self.index = index
         self.pop = pop
 
-    def do(self) -> None:
+    def do(self) -> bool:
         ref = self.stash_ref
         pop = self.pop
         if pop:
@@ -66,34 +66,37 @@ class ApplyStash(cmds.ContextCommand):
         else:
             args = [action, ref]
         status, out, err = self.git.stash(*args)
-        if status == 0:
+        ok = status == 0
+        if ok:
             Interaction.log_status(status, out, err)
         else:
             title = N_('Error')
             cmdargs = core.list2cmdline(args)
             Interaction.command_error(title, 'git stash ' + cmdargs, status, out, err)
         self.model.update_status()
+        return ok
 
 
 class DropStash(cmds.ContextCommand):
     def __init__(self, context, stash_index: str) -> None:
         super().__init__(context)
         self.stash_ref = 'refs/' + stash_index
+        self.result = ''
 
-    def do(self) -> str:
+    def do(self) -> bool:
         git = self.git
         status, out, err = git.stash('drop', self.stash_ref)
         if status == 0:
             Interaction.log_status(status, out, err)
             match = re.search(r'\((.*)\)', out)
             if match:
-                return match.group(1)
-            return ''
+                self.result = match.group(1)
+            return True
         title = N_('Error')
         Interaction.command_error(
             title, 'git stash drop ' + self.stash_ref, status, out, err
         )
-        return ''
+        return False
 
 
 class SaveStash(cmds.ContextCommand):
@@ -102,13 +105,14 @@ class SaveStash(cmds.ContextCommand):
         self.stash_name = stash_name
         self.keep_index = keep_index
 
-    def do(self) -> None:
+    def do(self) -> bool:
         if self.keep_index:
             args = ['push', '--keep-index', '-m', self.stash_name]
         else:
             args = ['push', '-m', self.stash_name]
         status, out, err = self.git.stash(*args)
-        if status == 0:
+        ok = status == 0
+        if ok:
             Interaction.log_status(status, out, err)
         else:
             title = N_('Error')
@@ -116,6 +120,7 @@ class SaveStash(cmds.ContextCommand):
             Interaction.command_error(title, 'git stash ' + cmdargs, status, out, err)
 
         self.model.update_status()
+        return ok
 
 
 class RenameStash(cmds.ContextCommand):
@@ -127,9 +132,11 @@ class RenameStash(cmds.ContextCommand):
         self.stash_index = stash_index
         self.stash_name = stash_name
 
-    def do(self) -> None:
+    def do(self) -> bool:
         # Drop the stash first and get the returned ref
-        ref = DropStash(self.context, self.stash_index).do()
+        cmd = DropStash(self.context, self.stash_index)
+        cmd.do()
+        ref = cmd.result
         # Store the stash with a new name
         if ref:
             args = ['store', '-m', self.stash_name, ref]
@@ -148,6 +155,7 @@ class RenameStash(cmds.ContextCommand):
             Interaction.critical(title, message=msg)
 
         self.model.update_status()
+        return True
 
 
 class StashIndex(cmds.ContextCommand):
@@ -157,7 +165,7 @@ class StashIndex(cmds.ContextCommand):
         super().__init__(context)
         self.stash_name = stash_name
 
-    def do(self) -> None:
+    def do(self) -> bool:
         # Manually create a stash representing the index state
         context = self.context
         git = self.git
@@ -170,14 +178,14 @@ class StashIndex(cmds.ContextCommand):
         status, out, err = git.rev_list('HEAD', '--', oneline=True, n=1)
         if status != 0:
             stash_error('rev-list', status, out, err)
-            return
+            return False
         head_msg = out.strip()
 
         # Create a commit representing the index
         status, out, err = git.write_tree()
         if status != 0:
             stash_error('write-tree', status, out, err)
-            return
+            return False
         index_tree = out.strip()
 
         status, out, err = git.commit_tree(
@@ -185,7 +193,7 @@ class StashIndex(cmds.ContextCommand):
         )
         if status != 0:
             stash_error('commit-tree', status, out, err)
-            return
+            return False
         index_commit = out.strip()
 
         # Create a commit representing the worktree
@@ -194,7 +202,7 @@ class StashIndex(cmds.ContextCommand):
         )
         if status != 0:
             stash_error('commit-tree', status, out, err)
-            return
+            return False
         worktree_commit = out.strip()
 
         # Record the stash entry
@@ -203,7 +211,7 @@ class StashIndex(cmds.ContextCommand):
         )
         if status != 0:
             stash_error('update-ref', status, out, err)
-            return
+            return False
 
         # Sync the worktree with the post-stash state.  We've created the
         # stash ref, so now we have to remove the staged changes from the
@@ -219,7 +227,7 @@ class StashIndex(cmds.ContextCommand):
         )
         if status != 0:
             stash_error('diff-tree', status, out, err)
-            return
+            return False
 
         # Apply the patch
         status, out, err = git.apply(patch)
@@ -232,6 +240,7 @@ class StashIndex(cmds.ContextCommand):
             stash_error('apply', status, out, err)
 
         self.model.update_status()
+        return ok
 
 
 def stash_error(cmd, status: int, out: str, err: str) -> None:
