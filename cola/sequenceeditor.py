@@ -309,7 +309,7 @@ class Editor(QtWidgets.QWidget):
         update_ref_rgx = re.compile(
             rf'^\s*({re_comment_char})?\s*(u|update-ref)\s+(.+)$'
         )
-        # The upper bound of 64 below must be >= all git.OID_LENGTH_XXX values.
+        # The upper bound of 64 below must be >= all git.OID_LENGTH_* values.
         pick_rgx = re.compile(
             (
                 r'^\s*(%s)?\s*'

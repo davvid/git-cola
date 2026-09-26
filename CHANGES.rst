@@ -3075,7 +3075,7 @@ Fixes
   (`#548 <https://github.com/git-cola/git-cola/issues/548>`_)
 
 * `git cola` now cleans up after itself immediately to avoid leaving behind
-  empty `/tmp/git-cola-XXXXXX` directories when the user uses `Ctrl+C`
+  empty ``/tmp/git-cola-*`` directories when the user uses `Ctrl+C`
   to quit the app.
   (`#566 <https://github.com/git-cola/git-cola/issues/566>`_)
 
